@@ -65,6 +65,44 @@ const initShaderProgram = (gl) => {
     return program;
 };
 
+//
+// gluLookAt
+//
+
+
+//
+// gluPerspective
+//
+function makePerspective(fovy, aspect, znear, zfar) {
+    let ymax = znear * Math.tan(fovy * Math.PI / 360.0);
+    let ymin = -ymax;
+    let xmin = ymin * aspect;
+    let xmax = ymax * aspect;
+
+    return makeFrustum(xmin, xmax, ymin, ymax, znear, zfar);
+}
+
+//
+// glFrustum
+//
+function makeFrustum(left, right, bottom, top, znear, zfar) {
+    let X = 2*znear/(right-left);
+    let Y = 2*znear/(top-bottom);
+    let A = (right+left)/(right-left);
+    let B = (top+bottom)/(top-bottom);
+    let C = -(zfar+znear)/(zfar-znear);
+    let D = -2*zfar*znear/(zfar-znear);
+
+    return $M([[X, 0, A, 0],
+        [0, Y, B, 0],
+        [0, 0, C, D],
+        [0, 0, -1, 0]]);
+}
+
+//
+// glOrtho
+//
+
 let buffer = {
     pos: {},
     col: {}
@@ -146,7 +184,7 @@ let mvMatrix;
 let dummy = new Dummy();
 
 class SolarApp {
-    constructor(cvs, options = {}) {
+    constructor(cvs) {
         canvas = cvs;
         gl = initializeWebGl(canvas);
         shader = initShaderProgram(gl);

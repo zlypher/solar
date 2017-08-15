@@ -1,4 +1,5 @@
 import { initShaderProgram } from "./shader/shader-program";
+import { makePerspective } from "./utility";
 import Dummy from "./dummy";
 
 /**
@@ -43,7 +44,7 @@ let mvMatrix;
 let dummy = new Dummy();
 
 export default class SolarApp {
-    constructor(cvs, options = {}) {
+    constructor(cvs) {
         canvas = cvs;
         gl = initializeWebGl(canvas);
         shader = initShaderProgram(gl);

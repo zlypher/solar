@@ -17,4 +17,4 @@ export const createFragmentShader = (gl) => {
     }
 
     return shader;
-}
+};
