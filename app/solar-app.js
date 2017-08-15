@@ -18,6 +18,11 @@ function initializeWebGl(canvas) {
     return gl;
 }
 
+function resizeToFullscreen(canvas) {
+    canvas.width = document.body.clientWidth;
+    canvas.height = document.body.clientHeight;
+}
+
 function setMatrixUniforms(gl, program) {
     var pUniform = gl.getUniformLocation(program, "uPMatrix");
     gl.uniformMatrix4fv(pUniform, false, new Float32Array(pMatrix.flatten()));
@@ -28,6 +33,7 @@ function setMatrixUniforms(gl, program) {
 
 let gl;
 let shader;
+let canvas;
 let vertexPositionAttribute;
 let vertexColorAttribute;
 
@@ -37,9 +43,12 @@ let mvMatrix;
 let dummy = new Dummy();
 
 export default class SolarApp {
-    constructor(canvas) {
+    constructor(cvs, options = {}) {
+        canvas = cvs;
         gl = initializeWebGl(canvas);
         shader = initShaderProgram(gl);
+        
+        resizeToFullscreen(canvas);
 
         vertexPositionAttribute = gl.getAttribLocation(shader, "aVertexPosition");
         gl.enableVertexAttribArray(vertexPositionAttribute);
@@ -51,10 +60,15 @@ export default class SolarApp {
         
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
+
+        this.onResize = this.onResize.bind(this);
     }
 
     onResize() {
-        // TODO
+        // TODO: Throttle number of calls.
+        // TODO: Remove explicit this.render call here.
+        resizeToFullscreen(canvas);
+        this.render();
     }
 
     doAction() {
