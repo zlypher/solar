@@ -207,9 +207,7 @@ class SolarApp {
 
     onResize() {
         // TODO: Throttle number of calls.
-        // TODO: Remove explicit this.render call here.
         resizeToFullscreen(canvas);
-        this.render();
     }
 
     doAction() {
@@ -237,8 +235,13 @@ class SolarApp {
 
 const app = new SolarApp(document.getElementById("solar"));
 
-app.doAction();
+const executeAppLoop = () => {
+    app.doAction();
+
+    window.requestAnimationFrame(executeAppLoop);
+};
 
 window.addEventListener("resize", app.onResize);
+window.requestAnimationFrame(executeAppLoop);
 
 }());

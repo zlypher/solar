@@ -67,9 +67,7 @@ export default class SolarApp {
 
     onResize() {
         // TODO: Throttle number of calls.
-        // TODO: Remove explicit this.render call here.
         resizeToFullscreen(canvas);
-        this.render();
     }
 
     doAction() {
