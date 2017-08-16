@@ -20,5 +20,8 @@
   "devDependencies": {
     "rollup": "^0.47.4",
     "rollup-plugin-eslint": "^4.0.0"
+  },
+  "dependencies": {
+    "sylvester": "0.0.21"
   }
 }

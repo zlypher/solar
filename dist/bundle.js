@@ -50,29 +50,49 @@ const createFragmentShader = (gl) => {
     return shader;
 };
 
-const initShaderProgram = (gl) => {
-    const program = gl.createProgram();
-    gl.attachShader(program, createVertexShader(gl));
-    gl.attachShader(program, createFragmentShader(gl));
-    gl.linkProgram(program);
+class Shader {
+    constructor(gl) {
+        this.program = gl.createProgram();
 
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        console.error("Initialization of shader failed");
-        return false;
+        gl.attachShader(this.program, createVertexShader(gl));
+        gl.attachShader(this.program, createFragmentShader(gl));
+        gl.linkProgram(this.program);
+
+        if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+            console.error("Initialization of shader failed");
+            return false;
+        }
+
+        gl.useProgram(this.program);
+
+        this.attributes = this.initAttributes(gl);
     }
 
-    gl.useProgram(program);
-    return program;
-};
+    initAttributes(gl) {
+        let attributes = {
+            position: gl.getAttribLocation(this.program, "aVertexPosition"),
+            color: gl.getAttribLocation(this.program, "aVertexColor"),
+        };
 
-//
+        gl.enableVertexAttribArray(attributes.position);
+        gl.enableVertexAttribArray(attributes.color);
+
+        return attributes;
+    }
+
+    setMatrices(gl, pMatrix, mvMatrix) {
+        const pUniform = gl.getUniformLocation(this.program, "uPMatrix");
+        const mvUniform = gl.getUniformLocation(this.program, "uMVMatrix");
+
+        gl.uniformMatrix4fv(pUniform, false, new Float32Array(pMatrix.flatten()));
+        gl.uniformMatrix4fv(mvUniform, false, new Float32Array(mvMatrix.flatten()));
+    }
+}
+
 // gluLookAt
-//
 
 
-//
 // gluPerspective
-//
 function makePerspective(fovy, aspect, znear, zfar) {
     let ymax = znear * Math.tan(fovy * Math.PI / 360.0);
     let ymin = -ymax;
@@ -82,9 +102,7 @@ function makePerspective(fovy, aspect, znear, zfar) {
     return makeFrustum(xmin, xmax, ymin, ymax, znear, zfar);
 }
 
-//
 // glFrustum
-//
 function makeFrustum(left, right, bottom, top, znear, zfar) {
     let X = 2*znear/(right-left);
     let Y = 2*znear/(top-bottom);
@@ -99,9 +117,7 @@ function makeFrustum(left, right, bottom, top, znear, zfar) {
         [0, 0, -1, 0]]);
 }
 
-//
 // glOrtho
-//
 
 let buffer = {
     pos: {},
@@ -133,69 +149,64 @@ class Dummy {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
     }
 
-    draw(gl, posAttr, colAttr) {
+    draw(gl, shader) {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.pos);
-        gl.vertexAttribPointer(posAttr, 3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(shader.attributes.position, 3, gl.FLOAT, false, 0, 0);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.col);
-        gl.vertexAttribPointer(colAttr, 4, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(shader.attributes.color, 4, gl.FLOAT, false, 0, 0);
+
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 }
 
 /**
- * Tries to initialize the webgl context for the given canvas.
- * @param {object} canvas The canvas to get the context for.
+ * Resizes the given canvas element to fit the whole screen.
+ * @param {DOMElement} canvas The canvas element to resize
  */
-function initializeWebGl(canvas) {
-    try {
-        gl = canvas.getContext("webgl");
-        gl.viewportWidth = canvas.width;
-        gl.viewportHeight = canvas.height;
-    } catch (e) {
-        console.error(e);
-        return null;
-    }
-
-    return gl;
-}
-
 function resizeToFullscreen(canvas) {
     canvas.width = document.body.clientWidth;
     canvas.height = document.body.clientHeight;
 }
 
-function setMatrixUniforms(gl, program) {
-    var pUniform = gl.getUniformLocation(program, "uPMatrix");
-    gl.uniformMatrix4fv(pUniform, false, new Float32Array(pMatrix.flatten()));
-
-    var mvUniform = gl.getUniformLocation(program, "uMVMatrix");
-    gl.uniformMatrix4fv(mvUniform, false, new Float32Array(mvMatrix.flatten()));
-}
-
+/**
+ * The WebGl context.
+ */
 let gl;
-let shader;
-let canvas;
-let vertexPositionAttribute;
-let vertexColorAttribute;
 
+/**
+ * Reference to the shader program.
+ */
+let shader;
+
+/**
+ * Reference to the underlying canvas DOMElement.
+ */
+let canvas;
+
+/**
+ * Reference to the projection matrix.
+ */
 let pMatrix;
+
+/**
+ * Reference to the model view matrix.
+ */
 let mvMatrix;
 
 let dummy = new Dummy();
 
 class SolarApp {
+    /**
+     * Prepares all necessary elements to execute and draw SolarApp.
+     * @param {DOMElement} cvs The canvas element to draw to 
+     */
     constructor(cvs) {
         canvas = cvs;
-        gl = initializeWebGl(canvas);
-        shader = initShaderProgram(gl);
-        
+        gl = this.initializeWebGl(canvas);
+        shader = new Shader(gl);
+
         resizeToFullscreen(canvas);
-
-        vertexPositionAttribute = gl.getAttribLocation(shader, "aVertexPosition");
-        gl.enableVertexAttribArray(vertexPositionAttribute);
-
-        vertexColorAttribute = gl.getAttribLocation(shader, "aVertexColor");
-        gl.enableVertexAttribArray(vertexColorAttribute);
 
         dummy.create(gl);
         
@@ -205,31 +216,65 @@ class SolarApp {
         this.onResize = this.onResize.bind(this);
     }
 
+    /**
+     * Tries to initialize the webgl context for the given canvas.
+     * @param {DOMElement} canvas The canvas to get the context for.
+     */
+    initializeWebGl(canvas) {
+        try {
+            let glContext = canvas.getContext("webgl");
+            glContext.viewportWidth = canvas.width;
+            glContext.viewportHeight = canvas.height;
+            return glContext;
+        } catch (e) {
+            this.onError(e);
+            return null;
+        }
+    }
+
+    /**
+     * Error Callback
+     */
+    onError(err) {
+        console.dir(err);
+    }
+
+    /**
+     * Resize Callback
+     */
     onResize() {
         // TODO: Throttle number of calls.
         resizeToFullscreen(canvas);
     }
 
     doAction() {
-        this.update();
-        this.render();
+        try {
+            this.update();
+            this.render();
+        } catch (err) {
+            this.onError(err);
+        }
     }
 
+    /**
+     * Update function of the SolarApp
+     */
     update() {
         // TODO
     }
 
+    /**
+     * Render function of the SolarApp
+     */
     render() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+        
         pMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
         mvMatrix = Matrix.I(4).x(Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4());
+        shader.setMatrices(gl, pMatrix, mvMatrix);
 
-        dummy.draw(gl, vertexPositionAttribute, vertexColorAttribute);
-
-        setMatrixUniforms(gl, shader);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        dummy.draw(gl, shader);
     }
 }
 

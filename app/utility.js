@@ -1,6 +1,4 @@
-//
 // gluLookAt
-//
 export function makeLookAt(ex, ey, ez, cx, cy, cz, ux, uy, uz) {
     let eye = $V([ex, ey, ez]);
     let center = $V([cx, cy, cz]);
@@ -23,9 +21,7 @@ export function makeLookAt(ex, ey, ez, cx, cy, cz, ux, uy, uz) {
     return m.x(t);
 }
 
-//
 // gluPerspective
-//
 export function makePerspective(fovy, aspect, znear, zfar) {
     let ymax = znear * Math.tan(fovy * Math.PI / 360.0);
     let ymin = -ymax;
@@ -35,9 +31,7 @@ export function makePerspective(fovy, aspect, znear, zfar) {
     return makeFrustum(xmin, xmax, ymin, ymax, znear, zfar);
 }
 
-//
 // glFrustum
-//
 export function makeFrustum(left, right, bottom, top, znear, zfar) {
     let X = 2*znear/(right-left);
     let Y = 2*znear/(top-bottom);
@@ -52,9 +46,7 @@ export function makeFrustum(left, right, bottom, top, znear, zfar) {
         [0, 0, -1, 0]]);
 }
 
-//
 // glOrtho
-//
 export function makeOrtho(left, right, bottom, top, znear, zfar) {
     let tx = - (right + left) / (right - left);
     let ty = - (top + bottom) / (top - bottom);

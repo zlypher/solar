@@ -28,11 +28,13 @@ export default class Dummy {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
     }
 
-    draw(gl, posAttr, colAttr) {
+    draw(gl, shader) {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.pos);
-        gl.vertexAttribPointer(posAttr, 3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(shader.attributes.position, 3, gl.FLOAT, false, 0, 0);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.col);
-        gl.vertexAttribPointer(colAttr, 4, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(shader.attributes.color, 4, gl.FLOAT, false, 0, 0);
+
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
 }
