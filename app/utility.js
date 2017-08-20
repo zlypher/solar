@@ -1,3 +1,11 @@
+/**
+ * Converts a number in degrees to radians.
+ * @param {number} degrees 
+ */
+export function degToRad(degrees) {
+    return degrees * Math.PI / 180;
+}
+
 // gluLookAt
 export function makeLookAt(ex, ey, ez, cx, cy, cz, ux, uy, uz) {
     let eye = $V([ex, ey, ez]);

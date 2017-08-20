@@ -44,6 +44,8 @@ export default class SolarApp {
      * @param {DOMElement} cvs The canvas element to draw to 
      */
     constructor(cvs) {
+        this.lastTime = new Date().getTime();
+
         canvas = cvs;
         gl = this.initializeWebGl(canvas);
         shader = new Shader(gl);
@@ -102,7 +104,13 @@ export default class SolarApp {
      * Update function of the SolarApp
      */
     update() {
-        // TODO
+        const now = new Date().getTime();
+        const elapsed = now - this.lastTime;
+
+        // ...
+        dummy.update(elapsed);
+
+        this.lastTime = now;
     }
 
     /**
@@ -114,8 +122,7 @@ export default class SolarApp {
         
         pMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
         mvMatrix = Matrix.I(4).x(Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4());
-        shader.setMatrices(gl, pMatrix, mvMatrix);
 
-        dummy.draw(gl, shader);
+        dummy.draw(gl, shader, pMatrix, mvMatrix);
     }
 }

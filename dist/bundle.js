@@ -76,6 +76,14 @@ class Shader {
     }
 }
 
+/**
+ * Converts a number in degrees to radians.
+ * @param {number} degrees 
+ */
+function degToRad(degrees) {
+    return degrees * Math.PI / 180;
+}
+
 // gluLookAt
 
 
@@ -112,6 +120,10 @@ let buffer = {
 };
 
 class Dummy {
+    constructor() {
+        this.rotation = 0;
+    }
+
     create(gl) {
         const vertices = [
             1.0,  1.0,  0.0,
@@ -136,14 +148,24 @@ class Dummy {
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
     }
 
-    draw(gl, shader) {
+    update(elapsed) {
+        this.rotation += (90 * elapsed) / 1000.0;
+    }
+
+    draw(gl, shader, pMatrix, mvBaseMatrix) {
+        // pushMatrix - TODO
+        const rotMatrix = Matrix.Rotation(degToRad(this.rotation), $V([0, 1, 0])).ensure4x4();
+        const mvMatrix = mvBaseMatrix.x(rotMatrix);
+
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.pos);
         gl.vertexAttribPointer(shader.attributes.position, 3, gl.FLOAT, false, 0, 0);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.col);
         gl.vertexAttribPointer(shader.attributes.color, 4, gl.FLOAT, false, 0, 0);
 
+        shader.setMatrices(gl, pMatrix, mvMatrix);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        // popMatrix - TODO
     }
 }
 
@@ -185,6 +207,8 @@ class SolarApp {
      * @param {DOMElement} cvs The canvas element to draw to 
      */
     constructor(cvs) {
+        this.lastTime = new Date().getTime();
+
         canvas = cvs;
         gl = this.initializeWebGl(canvas);
         shader = new Shader(gl);
@@ -243,7 +267,13 @@ class SolarApp {
      * Update function of the SolarApp
      */
     update() {
-        // TODO
+        const now = new Date().getTime();
+        const elapsed = now - this.lastTime;
+
+        // ...
+        dummy.update(elapsed);
+
+        this.lastTime = now;
     }
 
     /**
@@ -255,9 +285,8 @@ class SolarApp {
         
         pMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
         mvMatrix = Matrix.I(4).x(Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4());
-        shader.setMatrices(gl, pMatrix, mvMatrix);
 
-        dummy.draw(gl, shader);
+        dummy.draw(gl, shader, pMatrix, mvMatrix);
     }
 }
 
