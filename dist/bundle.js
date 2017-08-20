@@ -1,7 +1,15 @@
 (function () {
 'use strict';
 
-const source = `
+const fragmentSource = `
+varying lowp vec4 vColor;
+
+void main(void) {
+    gl_FragColor = vColor;
+}
+`;
+
+const vertexSource = `
 attribute vec3 aVertexPosition;
 attribute vec4 aVertexColor;
 
@@ -16,30 +24,9 @@ void main(void) {
 }
 `;
 
-const createVertexShader = (gl) => {
-    let shader = gl.createShader(gl.VERTEX_SHADER);
+const createShader = (gl, source, shaderType) => {
+    let shader = gl.createShader(shaderType);
     gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.error("Es ist ein Fehler beim Kompilieren der Shader aufgetaucht: " + gl.getShaderInfoLog(shader));
-        return null;
-    }
-
-    return shader;
-};
-
-const source$1 = `
-varying lowp vec4 vColor;
-
-void main(void) {
-    gl_FragColor = vColor;
-}
-`;
-
-const createFragmentShader = (gl) => {
-    let shader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(shader, source$1);
     gl.compileShader(shader);
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -54,8 +41,8 @@ class Shader {
     constructor(gl) {
         this.program = gl.createProgram();
 
-        gl.attachShader(this.program, createVertexShader(gl));
-        gl.attachShader(this.program, createFragmentShader(gl));
+        gl.attachShader(this.program, createShader(gl, fragmentSource, gl.FRAGMENT_SHADER));
+        gl.attachShader(this.program, createShader(gl, vertexSource, gl.VERTEX_SHADER));
         gl.linkProgram(this.program);
 
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
@@ -160,10 +147,6 @@ class Dummy {
     }
 }
 
-/**
- * Resizes the given canvas element to fit the whole screen.
- * @param {DOMElement} canvas The canvas element to resize
- */
 function resizeToFullscreen(canvas) {
     canvas.width = document.body.clientWidth;
     canvas.height = document.body.clientHeight;

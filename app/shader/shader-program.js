@@ -1,12 +1,45 @@
-import { createVertexShader } from "./vertex-shader";
-import { createFragmentShader } from "./fragment-shader";
+const fragmentSource = `
+varying lowp vec4 vColor;
+
+void main(void) {
+    gl_FragColor = vColor;
+}
+`;
+
+const vertexSource = `
+attribute vec3 aVertexPosition;
+attribute vec4 aVertexColor;
+
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+
+varying lowp vec4 vColor;
+
+void main(void) {
+    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+    vColor = aVertexColor;
+}
+`;
+
+const createShader = (gl, source, shaderType) => {
+    let shader = gl.createShader(shaderType);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error("Es ist ein Fehler beim Kompilieren der Shader aufgetaucht: " + gl.getShaderInfoLog(shader));
+        return null;
+    }
+
+    return shader;
+};
 
 export default class Shader {
     constructor(gl) {
         this.program = gl.createProgram();
 
-        gl.attachShader(this.program, createVertexShader(gl));
-        gl.attachShader(this.program, createFragmentShader(gl));
+        gl.attachShader(this.program, createShader(gl, fragmentSource, gl.FRAGMENT_SHADER));
+        gl.attachShader(this.program, createShader(gl, vertexSource, gl.VERTEX_SHADER));
         gl.linkProgram(this.program);
 
         if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
