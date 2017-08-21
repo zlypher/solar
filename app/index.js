@@ -1,6 +1,7 @@
 import SolarApp from "./solar-app";
 
-const app = new SolarApp(document.getElementById("solar"));
+const canvas = document.getElementById("solar");
+const app = new SolarApp(canvas);
 
 const executeAppLoop = () => {
     app.doAction();
@@ -8,5 +9,10 @@ const executeAppLoop = () => {
     window.requestAnimationFrame(executeAppLoop);
 };
 
+// Bind event listener
 window.addEventListener("resize", app.onResize);
+canvas.addEventListener("mousedown", app.onMouseDown);
+document.addEventListener("mouseup", app.onMouseUp);
+document.addEventListener("mousemove", app.onMouseMove);
+
 window.requestAnimationFrame(executeAppLoop);

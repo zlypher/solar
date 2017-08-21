@@ -222,16 +222,19 @@ class SolarApp {
         this.canvas = canvas;
         this.gl = this.initializeWebGl(this.canvas);
         this.shader = new Shader(this.gl);
+
         this.initializeTextures();
-
         resizeToFullscreen(this.canvas);
-
         dummy.create(this.gl, dummyTexture);
         
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
 
+        // Bind this to callbacks
         this.onResize = this.onResize.bind(this);
+        this.onMouseDown = this.onMouseDown.bind(this);
+        this.onMouseUp = this.onMouseUp.bind(this);
+        this.onMouseMove = this.onMouseMove.bind(this);
     }
 
     /**
@@ -292,6 +295,27 @@ class SolarApp {
         resizeToFullscreen(this.canvas);
     }
 
+    /**
+     * Mouse Down Callback
+     */
+    onMouseDown() {
+        // console.dir("Mouse Down");
+    }
+
+    /**
+     * Mouse Up Callback
+     */
+    onMouseUp() {
+        // console.dir("Mouse Up");
+    }
+
+    /**
+     * Mouse Move Callback
+     */
+    onMouseMove() {
+        // console.dir("Mouse Move");
+    }
+
     doAction() {
         try {
             this.update();
@@ -328,7 +352,8 @@ class SolarApp {
     }
 }
 
-const app = new SolarApp(document.getElementById("solar"));
+const canvas = document.getElementById("solar");
+const app = new SolarApp(canvas);
 
 const executeAppLoop = () => {
     app.doAction();
@@ -336,7 +361,12 @@ const executeAppLoop = () => {
     window.requestAnimationFrame(executeAppLoop);
 };
 
+// Bind event listener
 window.addEventListener("resize", app.onResize);
+canvas.addEventListener("mousedown", app.onMouseDown);
+document.addEventListener("mouseup", app.onMouseUp);
+document.addEventListener("mousemove", app.onMouseMove);
+
 window.requestAnimationFrame(executeAppLoop);
 
 }());

@@ -35,16 +35,19 @@ export default class SolarApp {
         this.canvas = canvas;
         this.gl = this.initializeWebGl(this.canvas);
         this.shader = new Shader(this.gl);
+
         this.initializeTextures();
-
         resizeToFullscreen(this.canvas);
-
         dummy.create(this.gl, dummyTexture);
         
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
 
+        // Bind this to callbacks
         this.onResize = this.onResize.bind(this);
+        this.onMouseDown = this.onMouseDown.bind(this);
+        this.onMouseUp = this.onMouseUp.bind(this);
+        this.onMouseMove = this.onMouseMove.bind(this);
     }
 
     /**
@@ -103,6 +106,27 @@ export default class SolarApp {
     onResize() {
         // TODO: Throttle number of calls.
         resizeToFullscreen(this.canvas);
+    }
+
+    /**
+     * Mouse Down Callback
+     */
+    onMouseDown() {
+        // console.dir("Mouse Down");
+    }
+
+    /**
+     * Mouse Up Callback
+     */
+    onMouseUp() {
+        // console.dir("Mouse Up");
+    }
+
+    /**
+     * Mouse Move Callback
+     */
+    onMouseMove() {
+        // console.dir("Mouse Move");
     }
 
     doAction() {
