@@ -1,23 +1,27 @@
 const fragmentSource = `
-varying lowp vec4 vColor;
+precision mediump float;
+
+varying vec2 vTextureCoord;
+
+uniform sampler2D uSampler;
 
 void main(void) {
-    gl_FragColor = vColor;
+    gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
 }
 `;
 
 const vertexSource = `
 attribute vec3 aVertexPosition;
-attribute vec4 aVertexColor;
+attribute vec2 aTextureCoord;
 
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 
-varying lowp vec4 vColor;
+varying vec2 vTextureCoord;
 
 void main(void) {
     gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-    vColor = aVertexColor;
+    vTextureCoord = aTextureCoord;
 }
 `;
 
@@ -55,12 +59,14 @@ export default class Shader {
     initAttributes(gl) {
         let attributes = {
             position: gl.getAttribLocation(this.program, "aVertexPosition"),
-            color: gl.getAttribLocation(this.program, "aVertexColor"),
+            // color: gl.getAttribLocation(this.program, "aVertexColor"),
+            texture: gl.getAttribLocation(this.program, "aTextureCoord")
         };
 
         gl.enableVertexAttribArray(attributes.position);
-        gl.enableVertexAttribArray(attributes.color);
-
+        // gl.enableVertexAttribArray(attributes.color);
+        gl.enableVertexAttribArray(attributes.texture);
+        
         return attributes;
     }
 
@@ -70,5 +76,10 @@ export default class Shader {
 
         gl.uniformMatrix4fv(pUniform, false, new Float32Array(pMatrix.flatten()));
         gl.uniformMatrix4fv(mvUniform, false, new Float32Array(mvMatrix.flatten()));
+    }
+
+    setTexture(gl, idx) {
+        const uniform = gl.getUniformLocation(this.program, "uSampler");
+        gl.uniform1i(uniform, idx);
     }
 }

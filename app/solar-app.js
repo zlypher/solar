@@ -12,21 +12,6 @@ function resizeToFullscreen(canvas) {
 }
 
 /**
- * The WebGl context.
- */
-let gl;
-
-/**
- * Reference to the shader program.
- */
-let shader;
-
-/**
- * Reference to the underlying canvas DOMElement.
- */
-let canvas;
-
-/**
  * Reference to the projection matrix.
  */
 let pMatrix;
@@ -38,24 +23,26 @@ let mvMatrix;
 
 let dummy = new Dummy();
 
+let dummyTexture;
+
 export default class SolarApp {
     /**
      * Prepares all necessary elements to execute and draw SolarApp.
-     * @param {DOMElement} cvs The canvas element to draw to 
+     * @param {DOMElement} canvas The canvas element to draw to 
      */
-    constructor(cvs) {
+    constructor(canvas) {
         this.lastTime = new Date().getTime();
+        this.canvas = canvas;
+        this.gl = this.initializeWebGl(this.canvas);
+        this.shader = new Shader(this.gl);
+        this.initializeTextures();
 
-        canvas = cvs;
-        gl = this.initializeWebGl(canvas);
-        shader = new Shader(gl);
+        resizeToFullscreen(this.canvas);
 
-        resizeToFullscreen(canvas);
-
-        dummy.create(gl);
+        dummy.create(this.gl, dummyTexture);
         
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.enable(gl.DEPTH_TEST);
+        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        this.gl.enable(this.gl.DEPTH_TEST);
 
         this.onResize = this.onResize.bind(this);
     }
@@ -77,6 +64,33 @@ export default class SolarApp {
     }
 
     /**
+     * Initializes the dummy texture.
+     */
+    initializeTextures() {
+        dummyTexture = this.gl.createTexture();
+        dummyTexture.image = new Image();
+        dummyTexture.image.onload = () => {
+            this.onLoadTexture(dummyTexture);
+        };
+    
+        dummyTexture.image.src = "./dist/textures/nehe.gif";
+    }
+
+    /**
+     * Configures the freshly loaded texture.
+     * @param {object} texture Texture data.
+     */
+    onLoadTexture(texture) {
+        // http://learningwebgl.com/blog/?p=507
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, texture.image);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+    }
+
+    /**
      * Error Callback
      */
     onError(err) {
@@ -88,7 +102,7 @@ export default class SolarApp {
      */
     onResize() {
         // TODO: Throttle number of calls.
-        resizeToFullscreen(canvas);
+        resizeToFullscreen(this.canvas);
     }
 
     doAction() {
@@ -117,12 +131,12 @@ export default class SolarApp {
      * Render function of the SolarApp
      */
     render() {
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         
         pMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
         mvMatrix = Matrix.I(4).x(Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4());
 
-        dummy.draw(gl, shader, pMatrix, mvMatrix);
+        dummy.draw(this.gl, this.shader, pMatrix, mvMatrix);
     }
 }

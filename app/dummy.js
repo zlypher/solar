@@ -2,15 +2,18 @@ import { degToRad } from "./utility";
 
 let buffer = {
     pos: {},
-    col: {}
+    tex: {}
 };
 
 export default class Dummy {
     constructor() {
         this.rotation = 0;
+        this.texture = null;
     }
 
-    create(gl) {
+    create(gl, texture) {
+        this.texture = texture;
+
         const vertices = [
             1.0,  1.0,  0.0,
             -1.0, 1.0,  0.0,
@@ -22,16 +25,18 @@ export default class Dummy {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.pos);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-        const colors = [
-            1.0,  1.0,  1.0,  1.0,    // white
-            1.0,  0.0,  0.0,  1.0,    // red
-            0.0,  1.0,  0.0,  1.0,    // green
-            0.0,  0.0,  1.0,  1.0     // blue
+        const textureCoords = [
+            1.0, 1.0,
+            0.0, 1.0,
+            1.0, 0.0,
+            0.0, 0.0,
         ];
 
-        buffer.col = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.col);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+        buffer.tex = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.tex);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+        buffer.tex.itemSize = 2;
+        buffer.tex.numItems = 4;
     }
 
     update(elapsed) {
@@ -46,8 +51,12 @@ export default class Dummy {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.pos);
         gl.vertexAttribPointer(shader.attributes.position, 3, gl.FLOAT, false, 0, 0);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.col);
-        gl.vertexAttribPointer(shader.attributes.color, 4, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.tex);
+        gl.vertexAttribPointer(shader.attributes.texture, buffer.tex.itemSize, gl.FLOAT, false, 0, 0);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        shader.setTexture(gl, 0);
 
         shader.setMatrices(gl, pMatrix, mvMatrix);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);

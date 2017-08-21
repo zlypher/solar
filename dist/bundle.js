@@ -2,25 +2,29 @@
 'use strict';
 
 const fragmentSource = `
-varying lowp vec4 vColor;
+precision mediump float;
+
+varying vec2 vTextureCoord;
+
+uniform sampler2D uSampler;
 
 void main(void) {
-    gl_FragColor = vColor;
+    gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
 }
 `;
 
 const vertexSource = `
 attribute vec3 aVertexPosition;
-attribute vec4 aVertexColor;
+attribute vec2 aTextureCoord;
 
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 
-varying lowp vec4 vColor;
+varying vec2 vTextureCoord;
 
 void main(void) {
     gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-    vColor = aVertexColor;
+    vTextureCoord = aTextureCoord;
 }
 `;
 
@@ -58,12 +62,14 @@ class Shader {
     initAttributes(gl) {
         let attributes = {
             position: gl.getAttribLocation(this.program, "aVertexPosition"),
-            color: gl.getAttribLocation(this.program, "aVertexColor"),
+            // color: gl.getAttribLocation(this.program, "aVertexColor"),
+            texture: gl.getAttribLocation(this.program, "aTextureCoord")
         };
 
         gl.enableVertexAttribArray(attributes.position);
-        gl.enableVertexAttribArray(attributes.color);
-
+        // gl.enableVertexAttribArray(attributes.color);
+        gl.enableVertexAttribArray(attributes.texture);
+        
         return attributes;
     }
 
@@ -73,6 +79,11 @@ class Shader {
 
         gl.uniformMatrix4fv(pUniform, false, new Float32Array(pMatrix.flatten()));
         gl.uniformMatrix4fv(mvUniform, false, new Float32Array(mvMatrix.flatten()));
+    }
+
+    setTexture(gl, idx) {
+        const uniform = gl.getUniformLocation(this.program, "uSampler");
+        gl.uniform1i(uniform, idx);
     }
 }
 
@@ -116,15 +127,18 @@ function makeFrustum(left, right, bottom, top, znear, zfar) {
 
 let buffer = {
     pos: {},
-    col: {}
+    tex: {}
 };
 
 class Dummy {
     constructor() {
         this.rotation = 0;
+        this.texture = null;
     }
 
-    create(gl) {
+    create(gl, texture) {
+        this.texture = texture;
+
         const vertices = [
             1.0,  1.0,  0.0,
             -1.0, 1.0,  0.0,
@@ -136,16 +150,18 @@ class Dummy {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.pos);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-        const colors = [
-            1.0,  1.0,  1.0,  1.0,    // white
-            1.0,  0.0,  0.0,  1.0,    // red
-            0.0,  1.0,  0.0,  1.0,    // green
-            0.0,  0.0,  1.0,  1.0     // blue
+        const textureCoords = [
+            1.0, 1.0,
+            0.0, 1.0,
+            1.0, 0.0,
+            0.0, 0.0,
         ];
 
-        buffer.col = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.col);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+        buffer.tex = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.tex);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+        buffer.tex.itemSize = 2;
+        buffer.tex.numItems = 4;
     }
 
     update(elapsed) {
@@ -160,8 +176,12 @@ class Dummy {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.pos);
         gl.vertexAttribPointer(shader.attributes.position, 3, gl.FLOAT, false, 0, 0);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.col);
-        gl.vertexAttribPointer(shader.attributes.color, 4, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.tex);
+        gl.vertexAttribPointer(shader.attributes.texture, buffer.tex.itemSize, gl.FLOAT, false, 0, 0);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        shader.setTexture(gl, 0);
 
         shader.setMatrices(gl, pMatrix, mvMatrix);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -169,25 +189,14 @@ class Dummy {
     }
 }
 
+/**
+ * Resizes the given canvas element to fit the whole screen.
+ * @param {DOMElement} canvas The canvas element to resize
+ */
 function resizeToFullscreen(canvas) {
     canvas.width = document.body.clientWidth;
     canvas.height = document.body.clientHeight;
 }
-
-/**
- * The WebGl context.
- */
-let gl;
-
-/**
- * Reference to the shader program.
- */
-let shader;
-
-/**
- * Reference to the underlying canvas DOMElement.
- */
-let canvas;
 
 /**
  * Reference to the projection matrix.
@@ -201,24 +210,26 @@ let mvMatrix;
 
 let dummy = new Dummy();
 
+let dummyTexture;
+
 class SolarApp {
     /**
      * Prepares all necessary elements to execute and draw SolarApp.
-     * @param {DOMElement} cvs The canvas element to draw to 
+     * @param {DOMElement} canvas The canvas element to draw to 
      */
-    constructor(cvs) {
+    constructor(canvas) {
         this.lastTime = new Date().getTime();
+        this.canvas = canvas;
+        this.gl = this.initializeWebGl(this.canvas);
+        this.shader = new Shader(this.gl);
+        this.initializeTextures();
 
-        canvas = cvs;
-        gl = this.initializeWebGl(canvas);
-        shader = new Shader(gl);
+        resizeToFullscreen(this.canvas);
 
-        resizeToFullscreen(canvas);
-
-        dummy.create(gl);
+        dummy.create(this.gl, dummyTexture);
         
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.enable(gl.DEPTH_TEST);
+        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        this.gl.enable(this.gl.DEPTH_TEST);
 
         this.onResize = this.onResize.bind(this);
     }
@@ -240,6 +251,33 @@ class SolarApp {
     }
 
     /**
+     * Initializes the dummy texture.
+     */
+    initializeTextures() {
+        dummyTexture = this.gl.createTexture();
+        dummyTexture.image = new Image();
+        dummyTexture.image.onload = () => {
+            this.onLoadTexture(dummyTexture);
+        };
+    
+        dummyTexture.image.src = "./dist/textures/nehe.gif";
+    }
+
+    /**
+     * Configures the freshly loaded texture.
+     * @param {object} texture Texture data.
+     */
+    onLoadTexture(texture) {
+        // http://learningwebgl.com/blog/?p=507
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, texture.image);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+    }
+
+    /**
      * Error Callback
      */
     onError(err) {
@@ -251,7 +289,7 @@ class SolarApp {
      */
     onResize() {
         // TODO: Throttle number of calls.
-        resizeToFullscreen(canvas);
+        resizeToFullscreen(this.canvas);
     }
 
     doAction() {
@@ -280,13 +318,13 @@ class SolarApp {
      * Render function of the SolarApp
      */
     render() {
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         
         pMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
         mvMatrix = Matrix.I(4).x(Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4());
 
-        dummy.draw(gl, shader, pMatrix, mvMatrix);
+        dummy.draw(this.gl, this.shader, pMatrix, mvMatrix);
     }
 }
 
