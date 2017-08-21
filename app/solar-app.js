@@ -1,6 +1,6 @@
 import Shader from "./shader/shader-program";
 import { makePerspective } from "./utility";
-import Dummy from "./dummy";
+import Planet from "./planet";
 
 /**
  * Resizes the given canvas element to fit the whole screen.
@@ -21,7 +21,7 @@ let pMatrix;
  */
 let mvMatrix;
 
-let dummy = new Dummy();
+let planet = new Planet();
 
 let dummyTexture;
 
@@ -38,7 +38,7 @@ export default class SolarApp {
 
         this.initializeTextures();
         resizeToFullscreen(this.canvas);
-        dummy.create(this.gl, dummyTexture);
+        planet.create(this.gl, dummyTexture);
         
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
@@ -146,7 +146,7 @@ export default class SolarApp {
         const elapsed = now - this.lastTime;
 
         // ...
-        dummy.update(elapsed);
+        planet.update(elapsed);
 
         this.lastTime = now;
     }
@@ -161,6 +161,6 @@ export default class SolarApp {
         pMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
         mvMatrix = Matrix.I(4).x(Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4());
 
-        dummy.draw(this.gl, this.shader, pMatrix, mvMatrix);
+        planet.draw(this.gl, this.shader, pMatrix, mvMatrix);
     }
 }
