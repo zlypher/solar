@@ -3,13 +3,15 @@
 let buffer = {
     idx: {},
     pos: {},
-    tex: {}
+    tex: {},
+    normal: {}
 };
 
 // http://learningwebgl.com/blog/?p=1253
 const setupSphere = (latBands, longBands, radius) => {
     const vertexData = [];
     const texData = [];
+    const normalData = [];
 
     for (let latIdx = 0; latIdx <= latBands; latIdx++) {
         const theta = latIdx * Math.PI / latBands;
@@ -30,14 +32,16 @@ const setupSphere = (latBands, longBands, radius) => {
 
             texData.push(...[u, v]);
             vertexData.push(...[ radius * x, radius * y, radius * z ]);
+            normalData.push(...[x, y, z]);
         }
     }
 
-    return { pos: vertexData, tex: texData };
+    return { pos: vertexData, tex: texData, normal: normalData };
 };
 
 export default class Planet {
     constructor() {
+        this.position = []; // TODO
         this.rotation = 0;
         this.latBands = 30;
         this.lonBands = 30;
@@ -66,6 +70,12 @@ export default class Planet {
                 ]);
             }
         }
+
+        buffer.normal = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.normal);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data.normal), gl.STATIC_DRAW);
+        buffer.normal.itemSize = 3;
+        buffer.normal.numitems = data.normal.length / 3;
 
         buffer.pos = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.pos);
@@ -98,6 +108,9 @@ export default class Planet {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.pos);
         gl.vertexAttribPointer(shader.attributes.position, buffer.pos.itemSize, gl.FLOAT, false, 0, 0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer.normal);
+        gl.vertexAttribPointer(shader.attributes.normal, buffer.normal.itemSize, gl.FLOAT, false, 0, 0);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer.tex);
         gl.vertexAttribPointer(shader.attributes.texture, buffer.tex.itemSize, gl.FLOAT, false, 0, 0);
