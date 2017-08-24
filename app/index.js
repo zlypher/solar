@@ -12,6 +12,7 @@ const executeAppLoop = () => {
 // Bind event listener
 window.addEventListener("resize", app.onResize);
 canvas.addEventListener("mousedown", app.onMouseDown);
+document.addEventListener("mousewheel", app.onMouseScroll);
 document.addEventListener("mouseup", app.onMouseUp);
 document.addEventListener("mousemove", app.onMouseMove);
 

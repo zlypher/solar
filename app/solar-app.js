@@ -1,14 +1,20 @@
 import Shader from "./shader/shader-program";
 import { makePerspective } from "./utility";
 import Planet from "./planet";
+import config from "./config";
+
 
 /**
  * Resizes the given canvas element to fit the whole screen.
  * @param {DOMElement} canvas The canvas element to resize
  */
-function resizeToFullscreen(canvas) {
-    canvas.width = document.body.clientWidth;
-    canvas.height = document.body.clientHeight;
+function resizeToFullscreen(canvas, glContext) {
+    const width = document.body.clientWidth;
+    const height = document.body.clientHeight;
+    canvas.width = width;
+    canvas.height = height;
+    glContext.viewportWidth = width;
+    glContext.viewportHeight = height;
 }
 
 /**
@@ -20,8 +26,6 @@ let pMatrix;
  * Reference to the model view matrix.
  */
 let mvMatrix;
-
-let planet = new Planet();
 
 let dummyTexture;
 
@@ -35,16 +39,19 @@ export default class SolarApp {
         this.canvas = canvas;
         this.gl = this.initializeWebGl(this.canvas);
         this.shader = new Shader(this.gl);
+        this.position = [0, 0, -50];
 
         this.initializeTextures();
-        resizeToFullscreen(this.canvas);
-        planet.create(this.gl, dummyTexture);
-        
+        resizeToFullscreen(this.canvas, this.gl);
+
+        this.solarSystem = this.setupSolarSystem(config.system, dummyTexture);
+
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
 
         // Bind this to callbacks
         this.onResize = this.onResize.bind(this);
+        this.onMouseScroll = this.onMouseScroll.bind(this);
         this.onMouseDown = this.onMouseDown.bind(this);
         this.onMouseUp = this.onMouseUp.bind(this);
         this.onMouseMove = this.onMouseMove.bind(this);
@@ -93,6 +100,25 @@ export default class SolarApp {
         this.gl.bindTexture(this.gl.TEXTURE_2D, null);
     }
 
+    setupSolarSystem(systemConfig, texture) {
+        const planets = [];
+
+        systemConfig.planets.forEach((planetConfig) => {
+            let p = new Planet({ position: [ 0, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture });
+            p.create(this.gl);
+
+            planetConfig.moons.forEach((moonConfig) => {
+                let m = new Planet({ position: [ moonConfig.distance * config.globalScale, 0, 0 ], radius: moonConfig.radius * config.globalScale, texture });
+                m.create(this.gl);
+                p.addChild(m);
+            });
+
+            planets.push(p);
+        });
+
+        return planets;
+    }
+
     /**
      * Error Callback
      */
@@ -105,7 +131,15 @@ export default class SolarApp {
      */
     onResize() {
         // TODO: Throttle number of calls.
-        resizeToFullscreen(this.canvas);
+        resizeToFullscreen(this.canvas, this.gl);
+    }
+
+    /**
+     * Mouse Scroll Callback
+     */
+    onMouseScroll(e) {
+        const zoomDir = Math.max(-1, Math.min(1, e.deltaY));
+        this.position[2] += zoomDir * config.zoomSpeed;
     }
 
     /**
@@ -145,8 +179,7 @@ export default class SolarApp {
         const now = new Date().getTime();
         const elapsed = now - this.lastTime;
 
-        // ...
-        planet.update(elapsed);
+        this.solarSystem.forEach(p => p.update(elapsed));
 
         this.lastTime = now;
     }
@@ -158,11 +191,11 @@ export default class SolarApp {
         this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         
-        pMatrix = makePerspective(45, 640.0/480.0, 0.1, 100.0);
-        mvMatrix = Matrix.I(4).x(Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4());
+        pMatrix = makePerspective(45, this.gl.viewportWidth/this.gl.viewportHeight, 0.1, 1000.0);
+        mvMatrix = Matrix.I(4).x(Matrix.Translation($V(this.position)).ensure4x4());
 
         this.shader.setLight(this.gl);
 
-        planet.draw(this.gl, this.shader, pMatrix, mvMatrix);
+        this.solarSystem.forEach(p => p.draw(this.gl, this.shader, pMatrix, mvMatrix));
     }
 }
