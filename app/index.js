@@ -1,7 +1,8 @@
 import SolarApp from "./solar-app";
 
 const canvas = document.getElementById("solar");
-const app = new SolarApp(canvas);
+const uiCanvas = document.getElementById("ui");
+const app = new SolarApp(canvas, uiCanvas);
 
 const executeAppLoop = () => {
     app.doAction();

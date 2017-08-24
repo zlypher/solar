@@ -157,7 +157,32 @@ function makeFrustum(left, right, bottom, top, znear, zfar) {
 
 // glOrtho
 
-// http://learningwebgl.com/blog/?p=1253
+class PerformanceCounter {
+    constructor() {
+        this.currentFps = 0;
+        this.averageDuration = 0;
+        this.tickNum = 0;
+    }
+
+    update(elapsed) {
+        this.averageDuration = this.recalculateAverageDuration(this.averageDuration, this.tickNum, elapsed);
+        this.tickNum += 1;
+        this.currentFps = 1000 / elapsed;
+    }
+
+    get fps() {
+        return this.currentFps;
+    }
+
+    get average() {
+        return this.averageDuration;
+    }
+
+    recalculateAverageDuration(avgDuration, tickNum, elapsed) {
+        return ((avgDuration * tickNum) + elapsed) / (tickNum + 1);
+    }
+}
+
 const setupSphere = (latBands, longBands, radius) => {
     const vertexData = [];
     const texData = [];
@@ -322,13 +347,22 @@ var config = {
     }
 };
 
-function resizeToFullscreen(canvas, glContext) {
+/**
+ * Resizes the given canvas element to fit the whole screen.
+ * @param {DOMElement} canvas The canvas element to resize
+ */
+function resizeToFullscreen(canvas, glContext, uiCanvas, uiContext) {
     const width = document.body.clientWidth;
     const height = document.body.clientHeight;
     canvas.width = width;
     canvas.height = height;
     glContext.viewportWidth = width;
     glContext.viewportHeight = height;
+    
+    uiCanvas.width = width;
+    uiCanvas.height = height;
+    uiContext.viewportWidth = width;
+    uiContext.viewportHeight = height;
 }
 
 /**
@@ -348,15 +382,18 @@ class SolarApp {
      * Prepares all necessary elements to execute and draw SolarApp.
      * @param {DOMElement} canvas The canvas element to draw to 
      */
-    constructor(canvas) {
+    constructor(canvas, uiCanvas) {
         this.lastTime = new Date().getTime();
         this.canvas = canvas;
-        this.gl = this.initializeWebGl(this.canvas);
+        this.uiCanvas = uiCanvas;
+        this.gl = this.initializeContext(this.canvas, "webgl");
+        this.uiContext = this.initializeContext(this.uiCanvas, "2d");
         this.shader = new Shader(this.gl);
         this.position = [0, 0, -50];
+        this.perfCounter = new PerformanceCounter();
 
         this.initializeTextures();
-        resizeToFullscreen(this.canvas, this.gl);
+        resizeToFullscreen(this.canvas, this.gl, this.uiCanvas, this.uiContext);
 
         this.solarSystem = this.setupSolarSystem(config.system, dummyTexture);
 
@@ -375,9 +412,9 @@ class SolarApp {
      * Tries to initialize the webgl context for the given canvas.
      * @param {DOMElement} canvas The canvas to get the context for.
      */
-    initializeWebGl(canvas) {
+    initializeContext(canvas, type) {
         try {
-            let glContext = canvas.getContext("webgl");
+            let glContext = canvas.getContext(type);
             glContext.viewportWidth = canvas.width;
             glContext.viewportHeight = canvas.height;
             return glContext;
@@ -445,7 +482,7 @@ class SolarApp {
      */
     onResize() {
         // TODO: Throttle number of calls.
-        resizeToFullscreen(this.canvas, this.gl);
+        resizeToFullscreen(this.canvas, this.gl, this.uiCanvas, this.uiContext);
     }
 
     /**
@@ -481,6 +518,7 @@ class SolarApp {
         try {
             this.update();
             this.render();
+            this.renderUI();
         } catch (err) {
             this.onError(err);
         }
@@ -493,6 +531,7 @@ class SolarApp {
         const now = new Date().getTime();
         const elapsed = now - this.lastTime;
 
+        this.perfCounter.update(elapsed);
         this.solarSystem.forEach(p => p.update(elapsed));
 
         this.lastTime = now;
@@ -512,10 +551,27 @@ class SolarApp {
 
         this.solarSystem.forEach(p => p.draw(this.gl, this.shader, pMatrix, mvMatrix));
     }
+
+    renderUI() {
+        this.uiContext.clearRect(0, 0, this.uiCanvas.width, this.uiCanvas.height);
+
+        const labelWidth = 100;
+        const labelHeight = 30;
+        const labelPosX = this.uiCanvas.width - labelWidth;
+        const labelPosY = this.uiCanvas.height - labelHeight;
+
+        this.uiContext.fillStyle = 'white';
+        this.uiContext.fillRect(labelPosX, labelPosY, labelWidth, labelHeight);
+
+        this.uiContext.fillStyle = 'black';
+        this.uiContext.fillText(`AVG: ${this.perfCounter.average.toFixed(2)}ms`, labelPosX + 5, labelPosY + 12);
+        this.uiContext.fillText(`FPS: ${this.perfCounter.fps.toFixed(1)}`, labelPosX + 5, labelPosY + 25);
+    }
 }
 
 const canvas = document.getElementById("solar");
-const app = new SolarApp(canvas);
+const uiCanvas = document.getElementById("ui");
+const app = new SolarApp(canvas, uiCanvas);
 
 const executeAppLoop = () => {
     app.doAction();

@@ -14,12 +14,19 @@
                 margin: 0;
                 padding: 0;
             }
+
+            #ui {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
         </style>
     </head>
     <body>
         <canvas id="solar" width="800" height="480">
-            Ihr Browser scheint das HTML5 <canvas> Element nicht zu unterstützen.
+            Ihr Browser scheint das HTML5 "canvas" Element nicht zu unterstützen.
         </canvas>
+        <canvas id="ui" width="800" height="480"></canvas>
         <script defer src="dist/_external/sylvester.js"></script>
         <script defer src="dist/_external/sylvester-utils.js"></script>  
         <script defer src="dist/bundle.js"></script>
