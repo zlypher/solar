@@ -63,7 +63,10 @@ export default class Planet {
             normal: {}
         };
 
+        this.parentRotation = 0;
         this.rotation = 0;
+
+        this.parentRotationSpeed = 30;
         this.rotationSpeed = 25;
     }
 
@@ -101,7 +104,8 @@ export default class Planet {
 
     update(elapsed) {
         this.rotation += (this.rotationSpeed * elapsed) / 1000.0;
-
+        this.parentRotation += (this.parentRotationSpeed * elapsed) / 1000.0;
+        
         this.children.forEach((child) => {
             child.update(elapsed);
         });
@@ -109,9 +113,10 @@ export default class Planet {
 
     draw(gl, shader, pMatrix, mvBaseMatrix) {
         // pushMatrix - TODO
+        const parentRotMatrix = Matrix.Rotation(degToRad(this.parentRotation), $V([0, 1, 0])).ensure4x4();
         const rotMatrix = Matrix.Rotation(degToRad(this.rotation), $V([0, 1, 0])).ensure4x4();
         const transMatrix = Matrix.Translation($V(this.position));
-        const mvMatrix = mvBaseMatrix.x(transMatrix.x(rotMatrix));
+        const mvMatrix = mvBaseMatrix.x(parentRotMatrix.x(transMatrix.x(rotMatrix)));
         // const mvMatrix = mvBaseMatrix;
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer.pos);
