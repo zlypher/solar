@@ -1,6 +1,7 @@
 import Shader from "./shader/shader-program";
 import { makePerspective } from "./utility";
 import PerformanceCounter from "./performance-counter";
+import TextureManager from "./texture-manager";
 import Planet from "./planet";
 import config from "./config";
 
@@ -33,8 +34,6 @@ let pMatrix;
  */
 let mvMatrix;
 
-let dummyTexture;
-
 export default class SolarApp {
     /**
      * Prepares all necessary elements to execute and draw SolarApp.
@@ -48,12 +47,11 @@ export default class SolarApp {
         this.uiContext = this.initializeContext(this.uiCanvas, "2d");
         this.shader = new Shader(this.gl);
         this.position = [0, 0, -50];
+
         this.perfCounter = new PerformanceCounter();
+        this.textureManager = new TextureManager(this.gl, config.textures);
 
-        this.initializeTextures();
         resizeToFullscreen(this.canvas, this.gl, this.uiCanvas, this.uiContext);
-
-        this.solarSystem = this.setupSolarSystem(config.system, dummyTexture);
 
         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
         this.gl.enable(this.gl.DEPTH_TEST);
@@ -64,6 +62,11 @@ export default class SolarApp {
         this.onMouseDown = this.onMouseDown.bind(this);
         this.onMouseUp = this.onMouseUp.bind(this);
         this.onMouseMove = this.onMouseMove.bind(this);
+    }
+
+    async initialize() {
+        await this.textureManager.initialize();
+        this.solarSystem = this.setupSolarSystem(config.system);
     }
 
     /**
@@ -82,42 +85,15 @@ export default class SolarApp {
         }
     }
 
-    /**
-     * Initializes the dummy texture.
-     */
-    initializeTextures() {
-        dummyTexture = this.gl.createTexture();
-        dummyTexture.image = new Image();
-        dummyTexture.image.onload = () => {
-            this.onLoadTexture(dummyTexture);
-        };
-    
-        dummyTexture.image.src = "./dist/textures/earth.jpg";
-    }
-
-    /**
-     * Configures the freshly loaded texture.
-     * @param {object} texture Texture data.
-     */
-    onLoadTexture(texture) {
-        // http://learningwebgl.com/blog/?p=507
-        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, texture.image);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, null);
-    }
-
-    setupSolarSystem(systemConfig, texture) {
+    setupSolarSystem(systemConfig) {
         const planets = [];
 
         systemConfig.planets.forEach((planetConfig) => {
-            let p = new Planet({ position: [ 0, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture });
+            let p = new Planet({ position: [ 0, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture: this.textureManager.getTexture(planetConfig.texture) });
             p.create(this.gl);
 
             planetConfig.moons.forEach((moonConfig) => {
-                let m = new Planet({ position: [ moonConfig.distance * config.globalScale, 0, 0 ], radius: moonConfig.radius * config.globalScale, texture });
+                let m = new Planet({ position: [ moonConfig.distance * config.globalScale, 0, 0 ], radius: moonConfig.radius * config.globalScale, texture: this.textureManager.getTexture(moonConfig.texture) });
                 m.create(this.gl);
                 p.addChild(m);
             });
@@ -218,10 +194,10 @@ export default class SolarApp {
         const labelPosX = this.uiCanvas.width - labelWidth;
         const labelPosY = this.uiCanvas.height - labelHeight;
 
-        this.uiContext.fillStyle = 'white';
+        this.uiContext.fillStyle = "white";
         this.uiContext.fillRect(labelPosX, labelPosY, labelWidth, labelHeight);
 
-        this.uiContext.fillStyle = 'black';
+        this.uiContext.fillStyle = "black";
         this.uiContext.fillText(`AVG: ${this.perfCounter.average.toFixed(2)}ms`, labelPosX + 5, labelPosY + 12);
         this.uiContext.fillText(`FPS: ${this.perfCounter.fps.toFixed(1)}`, labelPosX + 5, labelPosY + 25);
     }
