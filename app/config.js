@@ -7,21 +7,69 @@ export default {
     },
     globalScale: 0.001,
     textures: {
+        "sun": "./dist/textures/earth.jpg",
+        "mercury": "./dist/textures/mercury.jpg",
+        "venus": "./dist/textures/venus.jpg",
         "earth": "./dist/textures/earth.jpg",
         "moon": "./dist/textures/moon.gif",
+        "mars": "./dist/textures/mars.jpg",
+        "phobos": "./dist/textures/phobos.jpg",
+        "deimos": "./dist/textures/deimos.jpg",
     },
     system: {
         planets: [
+            // {
+            //     name: "Sun",
+            //     radius: 696342,
+            //     distance: 0,
+            //     texture: "moon",
+            //     moons: []
+            // },
+            {
+                name: "Mercury",
+                radius: 4880,
+                distance: 5000,
+                texture: "mercury",
+                moons: []
+            },
+            {
+                name: "Venus",
+                radius: 12100,
+                distance: 50000,
+                texture: "venus",
+                moons: []
+            },
             {
                 name: "Earth",
                 radius: 12756,
+                distance: 150000,
                 texture: "earth",
                 moons: [
                     {
                         name: "Moon",
                         radius: 3476,
-                        distance: 20000,
+                        distance: 30 * 12756,
                         texture: "moon"
+                    }
+                ]
+            },
+            {
+                name: "Mars",
+                radius: 6792,
+                distance: 250000,
+                texture: "mars",
+                moons: [
+                    {
+                        name: "Phobos",
+                        radius: 22.4,
+                        distance: 10000,
+                        texture: "phobos"
+                    },
+                    {
+                        name: "Deimos",
+                        radius: 12.2,
+                        distance: 10000,
+                        texture: "deimos"
                     }
                 ]
             }

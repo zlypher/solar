@@ -383,21 +383,69 @@ var config = {
     },
     globalScale: 0.001,
     textures: {
+        "sun": "./dist/textures/earth.jpg",
+        "mercury": "./dist/textures/mercury.jpg",
+        "venus": "./dist/textures/venus.jpg",
         "earth": "./dist/textures/earth.jpg",
         "moon": "./dist/textures/moon.gif",
+        "mars": "./dist/textures/mars.jpg",
+        "phobos": "./dist/textures/phobos.jpg",
+        "deimos": "./dist/textures/deimos.jpg",
     },
     system: {
         planets: [
+            // {
+            //     name: "Sun",
+            //     radius: 696342,
+            //     distance: 0,
+            //     texture: "moon",
+            //     moons: []
+            // },
+            {
+                name: "Mercury",
+                radius: 4880,
+                distance: 5000,
+                texture: "mercury",
+                moons: []
+            },
+            {
+                name: "Venus",
+                radius: 12100,
+                distance: 50000,
+                texture: "venus",
+                moons: []
+            },
             {
                 name: "Earth",
                 radius: 12756,
+                distance: 150000,
                 texture: "earth",
                 moons: [
                     {
                         name: "Moon",
                         radius: 3476,
-                        distance: 20000,
+                        distance: 30 * 12756,
                         texture: "moon"
+                    }
+                ]
+            },
+            {
+                name: "Mars",
+                radius: 6792,
+                distance: 250000,
+                texture: "mars",
+                moons: [
+                    {
+                        name: "Phobos",
+                        radius: 22.4,
+                        distance: 10000,
+                        texture: "phobos"
+                    },
+                    {
+                        name: "Deimos",
+                        radius: 12.2,
+                        distance: 10000,
+                        texture: "deimos"
                     }
                 ]
             }
@@ -494,11 +542,11 @@ class SolarApp {
         const planets = [];
 
         systemConfig.planets.forEach((planetConfig) => {
-            let p = new Planet({ position: [ 0, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture: this.textureManager.getTexture(planetConfig.texture) });
+            let p = new Planet({ position: [ planetConfig.distance * config.globalScale, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture: this.textureManager.getTexture(planetConfig.texture) });
             p.create(this.gl);
 
             planetConfig.moons.forEach((moonConfig) => {
-                let m = new Planet({ position: [ moonConfig.distance * config.globalScale, 0, 0 ], radius: moonConfig.radius * config.globalScale, texture: this.textureManager.getTexture(moonConfig.texture) });
+                let m = new Planet({ position: [ (planetConfig.distance + moonConfig.distance) * config.globalScale, 0, 0 ], radius: moonConfig.radius * config.globalScale, texture: this.textureManager.getTexture(moonConfig.texture) });
                 m.create(this.gl);
                 p.addChild(m);
             });
