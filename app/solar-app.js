@@ -1,5 +1,5 @@
 import Shader from "./shader/shader-program";
-import { makePerspective } from "./utility";
+import { degToRad, makePerspective } from "./utility";
 import PerformanceCounter from "./performance-counter";
 import TextureManager from "./texture-manager";
 import Planet from "./planet";
@@ -46,7 +46,13 @@ export default class SolarApp {
         this.gl = this.initializeContext(this.canvas, "webgl");
         this.uiContext = this.initializeContext(this.uiCanvas, "2d");
         this.shader = new Shader(this.gl);
-        this.position = [0, 0, -50];
+
+        this.yaw = 0;
+        this.pitch = 0;
+        this.mouseFactor = 1.5;
+        this.mousePosition = { x: 0, y: 0 };
+        this.cameraPosition = [0, 0, -50];
+        this.isMouseDown = false;
 
         this.perfCounter = new PerformanceCounter();
         this.textureManager = new TextureManager(this.gl, config.textures);
@@ -124,27 +130,36 @@ export default class SolarApp {
      */
     onMouseScroll(e) {
         const zoomDir = Math.max(-1, Math.min(1, e.deltaY));
-        this.position[2] += zoomDir * config.zoomSpeed;
+        this.cameraPosition[2] += zoomDir * config.zoomSpeed;
     }
 
     /**
      * Mouse Down Callback
      */
     onMouseDown() {
-        // console.dir("Mouse Down");
+        this.isMouseDown = true;
     }
 
     /**
      * Mouse Up Callback
      */
     onMouseUp() {
-        // console.dir("Mouse Up");
+        this.isMouseDown = false;
     }
 
     /**
      * Mouse Move Callback
      */
-    onMouseMove() {
+    onMouseMove({ clientX, clientY }) {
+        if (this.isMouseDown) {
+            const { x:lastX , y:lastY } = this.mousePosition;
+            const dX = clientX - lastX;
+            const dY = clientY - lastY;
+            
+        }
+
+        this.mousePosition.x = clientX;
+        this.mousePosition.y = clientY;
         // console.dir("Mouse Move");
     }
 
@@ -179,9 +194,15 @@ export default class SolarApp {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         
         pMatrix = makePerspective(45, this.gl.viewportWidth/this.gl.viewportHeight, 0.1, 1000.0);
-        mvMatrix = Matrix.I(4).x(Matrix.Translation($V(this.position)).ensure4x4());
+        mvMatrix = Matrix.I(4)
+            // Move Camera
+            .x(Matrix.Translation($V(this.cameraPosition)).ensure4x4())
+            // Rotate around y-axis (vertical)
+            .x(Matrix.Rotation(degToRad(this.yaw), $V([0, 1, 0])).ensure4x4())
+            // Rotate around x-axis (horizontal)
+            .x(Matrix.Rotation(degToRad(this.pitch), $V([1, 0, 0])).ensure4x4());
 
-        this.shader.setLight(this.gl);
+            this.shader.setLight(this.gl);
 
         this.solarSystem.forEach(p => p.draw(this.gl, this.shader, pMatrix, mvMatrix));
     }
