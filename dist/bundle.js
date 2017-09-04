@@ -375,7 +375,12 @@ class Planet {
 }
 
 var config = {
-    zoomSpeed: 0.5,
+    moveSpeed: 0.05,
+    zoomSpeed: 5,
+    camera: {
+        zNear: 10,
+        zFar: 10000
+    },
     globalScale: 0.001,
     textures: {
         "earth": "./dist/textures/earth.jpg",
@@ -550,11 +555,12 @@ class SolarApp {
             const dX = clientX - lastX;
             const dY = clientY - lastY;
             
+            this.cameraPosition[0] += -1 * dX * config.moveSpeed;
+            this.cameraPosition[1] += dY * config.moveSpeed;
         }
 
         this.mousePosition.x = clientX;
         this.mousePosition.y = clientY;
-        // console.dir("Mouse Move");
     }
 
     doAction() {
@@ -587,7 +593,7 @@ class SolarApp {
         this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         
-        pMatrix = makePerspective(45, this.gl.viewportWidth/this.gl.viewportHeight, 0.1, 1000.0);
+        pMatrix = makePerspective(45, this.gl.viewportWidth/this.gl.viewportHeight, config.camera.zNear, config.camera.zFar);
         mvMatrix = Matrix.I(4)
             // Move Camera
             .x(Matrix.Translation($V(this.cameraPosition)).ensure4x4())

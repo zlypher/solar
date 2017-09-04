@@ -1,5 +1,10 @@
 export default {
-    zoomSpeed: 0.5,
+    moveSpeed: 0.05,
+    zoomSpeed: 5,
+    camera: {
+        zNear: 10,
+        zFar: 10000
+    },
     globalScale: 0.001,
     textures: {
         "earth": "./dist/textures/earth.jpg",
