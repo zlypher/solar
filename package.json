@@ -1,0 +1,26 @@
+{
+  "name": "solar",
+  "version": "0.0.1",
+  "description": "Solar is a 3D solar system simulation written in Javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"TODO: Add tests\" && exit 0",
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "start": "http-server"
+  },
+  "keywords": [
+    "solar",
+    "system",
+    "universe",
+    "3d",
+    "webgl"
+  ],
+  "author": "Thomas Prochazka <thomas.prochazka@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^0.10.0",
+    "rollup": "^0.47.4",
+    "rollup-plugin-eslint": "^4.0.0"
+  }
+}
