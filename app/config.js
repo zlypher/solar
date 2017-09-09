@@ -15,6 +15,10 @@ export default {
         "mars": "./dist/textures/mars.jpg",
         "phobos": "./dist/textures/phobos.jpg",
         "deimos": "./dist/textures/deimos.jpg",
+        "jupiter": "./dist/textures/jupiter.jpg",
+        "saturn": "./dist/textures/saturn.jpg",
+        "uranus": "./dist/textures/uranus.jpg",
+        "neptune": "./dist/textures/neptune.jpg",
     },
     system: {
         planets: [
@@ -32,7 +36,7 @@ export default {
                 radius: 4880,
                 distance: 5000,
                 speed: 0,
-                rotationSpeed: 0,
+                rotationSpeed: 20,
                 texture: "mercury",
                 moons: []
             },
@@ -88,6 +92,42 @@ export default {
                         texture: "deimos"
                     }
                 ]
+            },
+            {
+                name: "Jupiter",
+                radius: 142984,
+                distance: 800000,
+                speed: 20,
+                rotationSpeed: 50,
+                texture: "jupiter",
+                moons: []
+            },
+            {
+                name: "Saturn",
+                radius: 120536,
+                distance: 1250000,
+                speed: 15,
+                rotationSpeed: 50,
+                texture: "saturn",
+                moons: []
+            },
+            {
+                name: "Uranus",
+                radius: 51118,
+                distance: 1500000,
+                speed: 10,
+                rotationSpeed: 50,
+                texture: "uranus",
+                moons: []
+            },
+            {
+                name: "Neptune",
+                radius: 49538,
+                distance: 1750000,
+                speed: 5,
+                rotationSpeed: 50,
+                texture: "neptune",
+                moons: []
             }
         ]
     }
