@@ -95,7 +95,7 @@ export default class SolarApp {
         const planets = [];
 
         systemConfig.planets.forEach((planetConfig) => {
-            let p = new Planet({ position: [ planetConfig.distance * config.globalScale, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture: this.textureManager.getTexture(planetConfig.texture), speed: planetConfig.speed, rotationSpeed: planetConfig.rotationSpeed });
+            let p = new Planet({ position: [ planetConfig.distance * config.globalScale, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture: this.textureManager.getTexture(planetConfig.texture), speed: planetConfig.speed, rotationSpeed: planetConfig.rotationSpeed, orbitalInclination: planetConfig.orbitalInclination });
             p.create(this.gl);
 
             planetConfig.moons.forEach((moonConfig) => {

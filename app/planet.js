@@ -51,12 +51,13 @@ const setupSphere = (latBands, longBands, radius) => {
 };
 
 export default class Planet {
-    constructor({ position = [ 0, 0, 0 ], radius = 1, texture = {}, speed = 0, rotationSpeed = 0 }) {
+    constructor({ position = [ 0, 0, 0 ], radius = 1, texture = {}, speed = 0, rotationSpeed = 0, orbitalInclination = 0 }) {
         this.position = position; // TODO
         this.radius = radius;
         this.texture = texture;
         this.parentRotationSpeed = speed;
         this.rotationSpeed = rotationSpeed;
+        this.orbitalInclination = orbitalInclination;
         this.children = [];
         this.buffer = {
             idx: {},
@@ -112,10 +113,15 @@ export default class Planet {
 
     draw(gl, shader, pMatrix, mvBaseMatrix) {
         // pushMatrix - TODO
+        const inclinationMatrix = Matrix.Rotation(degToRad(this.orbitalInclination), $V([0, 0, 1])).ensure4x4();
         const parentRotMatrix = Matrix.Rotation(degToRad(this.parentRotation), $V([0, 1, 0])).ensure4x4();
         const rotMatrix = Matrix.Rotation(degToRad(this.rotation), $V([0, 1, 0])).ensure4x4();
         const transMatrix = Matrix.Translation($V(this.position));
-        const mvMatrix = mvBaseMatrix.x(parentRotMatrix.x(transMatrix.x(rotMatrix)));
+        const mvMatrix = mvBaseMatrix.x(
+            inclinationMatrix.x(
+            parentRotMatrix.x(
+            transMatrix.x(
+            rotMatrix))));
         // const mvMatrix = mvBaseMatrix;
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer.pos);

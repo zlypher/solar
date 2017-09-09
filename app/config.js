@@ -25,6 +25,7 @@ export default {
             // {
             //     name: "Sun",
             //     radius: 696342,
+            //     orbitalInclination: 0,
             //     distance: 0,
             //     speed: 0,
             //     rotationSpeed: 0,
@@ -34,6 +35,7 @@ export default {
             {
                 name: "Mercury",
                 radius: 4880,
+                orbitalInclination: 7.00487,
                 distance: 5000,
                 speed: 0,
                 rotationSpeed: 20,
@@ -43,6 +45,7 @@ export default {
             {
                 name: "Venus",
                 radius: 12100,
+                orbitalInclination: 3.395,
                 distance: 50000,
                 speed: 10,
                 rotationSpeed: 20,
@@ -52,14 +55,16 @@ export default {
             {
                 name: "Earth",
                 radius: 12756,
+                orbitalInclination: 0,
                 distance: 150000,
-                speed: 30,
+                speed: 20,
                 rotationSpeed: 40,
                 texture: "earth",
                 moons: [
                     {
                         name: "Moon",
                         radius: 3476,
+                        orbitalInclination: 0,
                         distance: 30 * 12756,
                         speed: 0,
                         rotationSpeed: 0,
@@ -70,6 +75,7 @@ export default {
             {
                 name: "Mars",
                 radius: 6792,
+                orbitalInclination: 1.850,
                 distance: 250000,
                 speed: 40,
                 rotationSpeed: 30,
@@ -78,6 +84,7 @@ export default {
                     {
                         name: "Phobos",
                         radius: 22.4,
+                        orbitalInclination: 0,
                         distance: 10000,
                         speed: 0,
                         rotationSpeed: 0,
@@ -86,6 +93,7 @@ export default {
                     {
                         name: "Deimos",
                         radius: 12.2,
+                        orbitalInclination: 0,
                         distance: 10000,
                         speed: 0,
                         rotationSpeed: 0,
@@ -96,6 +104,7 @@ export default {
             {
                 name: "Jupiter",
                 radius: 142984,
+                orbitalInclination: 1.305,
                 distance: 800000,
                 speed: 20,
                 rotationSpeed: 50,
@@ -105,6 +114,7 @@ export default {
             {
                 name: "Saturn",
                 radius: 120536,
+                orbitalInclination: 2.484,
                 distance: 1250000,
                 speed: 15,
                 rotationSpeed: 50,
@@ -114,6 +124,7 @@ export default {
             {
                 name: "Uranus",
                 radius: 51118,
+                orbitalInclination: 0.770,
                 distance: 1500000,
                 speed: 10,
                 rotationSpeed: 50,
@@ -123,6 +134,7 @@ export default {
             {
                 name: "Neptune",
                 radius: 49538,
+                orbitalInclination: 1.769,
                 distance: 1750000,
                 speed: 5,
                 rotationSpeed: 50,

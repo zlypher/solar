@@ -281,12 +281,13 @@ const setupSphere = (latBands, longBands, radius) => {
 };
 
 class Planet {
-    constructor({ position = [ 0, 0, 0 ], radius = 1, texture = {}, speed = 0, rotationSpeed = 0 }) {
+    constructor({ position = [ 0, 0, 0 ], radius = 1, texture = {}, speed = 0, rotationSpeed = 0, orbitalInclination = 0 }) {
         this.position = position; // TODO
         this.radius = radius;
         this.texture = texture;
         this.parentRotationSpeed = speed;
         this.rotationSpeed = rotationSpeed;
+        this.orbitalInclination = orbitalInclination;
         this.children = [];
         this.buffer = {
             idx: {},
@@ -342,10 +343,15 @@ class Planet {
 
     draw(gl, shader, pMatrix, mvBaseMatrix) {
         // pushMatrix - TODO
+        const inclinationMatrix = Matrix.Rotation(degToRad(this.orbitalInclination), $V([0, 0, 1])).ensure4x4();
         const parentRotMatrix = Matrix.Rotation(degToRad(this.parentRotation), $V([0, 1, 0])).ensure4x4();
         const rotMatrix = Matrix.Rotation(degToRad(this.rotation), $V([0, 1, 0])).ensure4x4();
         const transMatrix = Matrix.Translation($V(this.position));
-        const mvMatrix = mvBaseMatrix.x(parentRotMatrix.x(transMatrix.x(rotMatrix)));
+        const mvMatrix = mvBaseMatrix.x(
+            inclinationMatrix.x(
+            parentRotMatrix.x(
+            transMatrix.x(
+            rotMatrix))));
         // const mvMatrix = mvBaseMatrix;
         
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer.pos);
@@ -400,6 +406,7 @@ var config = {
             // {
             //     name: "Sun",
             //     radius: 696342,
+            //     orbitalInclination: 0,
             //     distance: 0,
             //     speed: 0,
             //     rotationSpeed: 0,
@@ -409,6 +416,7 @@ var config = {
             {
                 name: "Mercury",
                 radius: 4880,
+                orbitalInclination: 7.00487,
                 distance: 5000,
                 speed: 0,
                 rotationSpeed: 20,
@@ -418,6 +426,7 @@ var config = {
             {
                 name: "Venus",
                 radius: 12100,
+                orbitalInclination: 3.395,
                 distance: 50000,
                 speed: 10,
                 rotationSpeed: 20,
@@ -427,14 +436,16 @@ var config = {
             {
                 name: "Earth",
                 radius: 12756,
+                orbitalInclination: 0,
                 distance: 150000,
-                speed: 30,
+                speed: 20,
                 rotationSpeed: 40,
                 texture: "earth",
                 moons: [
                     {
                         name: "Moon",
                         radius: 3476,
+                        orbitalInclination: 0,
                         distance: 30 * 12756,
                         speed: 0,
                         rotationSpeed: 0,
@@ -445,6 +456,7 @@ var config = {
             {
                 name: "Mars",
                 radius: 6792,
+                orbitalInclination: 1.850,
                 distance: 250000,
                 speed: 40,
                 rotationSpeed: 30,
@@ -453,6 +465,7 @@ var config = {
                     {
                         name: "Phobos",
                         radius: 22.4,
+                        orbitalInclination: 0,
                         distance: 10000,
                         speed: 0,
                         rotationSpeed: 0,
@@ -461,6 +474,7 @@ var config = {
                     {
                         name: "Deimos",
                         radius: 12.2,
+                        orbitalInclination: 0,
                         distance: 10000,
                         speed: 0,
                         rotationSpeed: 0,
@@ -471,6 +485,7 @@ var config = {
             {
                 name: "Jupiter",
                 radius: 142984,
+                orbitalInclination: 1.305,
                 distance: 800000,
                 speed: 20,
                 rotationSpeed: 50,
@@ -480,6 +495,7 @@ var config = {
             {
                 name: "Saturn",
                 radius: 120536,
+                orbitalInclination: 2.484,
                 distance: 1250000,
                 speed: 15,
                 rotationSpeed: 50,
@@ -489,6 +505,7 @@ var config = {
             {
                 name: "Uranus",
                 radius: 51118,
+                orbitalInclination: 0.770,
                 distance: 1500000,
                 speed: 10,
                 rotationSpeed: 50,
@@ -498,6 +515,7 @@ var config = {
             {
                 name: "Neptune",
                 radius: 49538,
+                orbitalInclination: 1.769,
                 distance: 1750000,
                 speed: 5,
                 rotationSpeed: 50,
@@ -593,7 +611,7 @@ class SolarApp {
         const planets = [];
 
         systemConfig.planets.forEach((planetConfig) => {
-            let p = new Planet({ position: [ planetConfig.distance * config.globalScale, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture: this.textureManager.getTexture(planetConfig.texture), speed: planetConfig.speed, rotationSpeed: planetConfig.rotationSpeed });
+            let p = new Planet({ position: [ planetConfig.distance * config.globalScale, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture: this.textureManager.getTexture(planetConfig.texture), speed: planetConfig.speed, rotationSpeed: planetConfig.rotationSpeed, orbitalInclination: planetConfig.orbitalInclination });
             p.create(this.gl);
 
             planetConfig.moons.forEach((moonConfig) => {
