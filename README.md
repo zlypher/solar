@@ -3,6 +3,7 @@
 Solar is a 3D simulation of our solar system written in Javascript.
 
 [![Build Status](https://travis-ci.org/zlypher/solar.svg?branch=master)](https://travis-ci.org/zlypher/solar)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Keep in mind, that it is currently under development to get an initial version up and running. The textures are courtesy of [the Jet Propulsion Laboratory.](http://maps.jpl.nasa.gov/)
  
