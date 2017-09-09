@@ -281,10 +281,12 @@ const setupSphere = (latBands, longBands, radius) => {
 };
 
 class Planet {
-    constructor({ position = [ 0, 0, 0 ], radius = 1, texture = {} }) {
+    constructor({ position = [ 0, 0, 0 ], radius = 1, texture = {}, speed = 0, rotationSpeed = 0 }) {
         this.position = position; // TODO
         this.radius = radius;
         this.texture = texture;
+        this.parentRotationSpeed = speed;
+        this.rotationSpeed = rotationSpeed;
         this.children = [];
         this.buffer = {
             idx: {},
@@ -295,9 +297,6 @@ class Planet {
 
         this.parentRotation = 0;
         this.rotation = 0;
-
-        this.parentRotationSpeed = 30;
-        this.rotationSpeed = 25;
     }
 
     addChild(child) {
@@ -398,6 +397,8 @@ var config = {
             //     name: "Sun",
             //     radius: 696342,
             //     distance: 0,
+            //     speed: 0,
+            //     rotationSpeed: 0,
             //     texture: "moon",
             //     moons: []
             // },
@@ -405,6 +406,8 @@ var config = {
                 name: "Mercury",
                 radius: 4880,
                 distance: 5000,
+                speed: 0,
+                rotationSpeed: 0,
                 texture: "mercury",
                 moons: []
             },
@@ -412,6 +415,8 @@ var config = {
                 name: "Venus",
                 radius: 12100,
                 distance: 50000,
+                speed: 10,
+                rotationSpeed: 20,
                 texture: "venus",
                 moons: []
             },
@@ -419,12 +424,16 @@ var config = {
                 name: "Earth",
                 radius: 12756,
                 distance: 150000,
+                speed: 30,
+                rotationSpeed: 40,
                 texture: "earth",
                 moons: [
                     {
                         name: "Moon",
                         radius: 3476,
                         distance: 30 * 12756,
+                        speed: 0,
+                        rotationSpeed: 0,
                         texture: "moon"
                     }
                 ]
@@ -433,18 +442,24 @@ var config = {
                 name: "Mars",
                 radius: 6792,
                 distance: 250000,
+                speed: 40,
+                rotationSpeed: 30,
                 texture: "mars",
                 moons: [
                     {
                         name: "Phobos",
                         radius: 22.4,
                         distance: 10000,
+                        speed: 0,
+                        rotationSpeed: 0,
                         texture: "phobos"
                     },
                     {
                         name: "Deimos",
                         radius: 12.2,
                         distance: 10000,
+                        speed: 0,
+                        rotationSpeed: 0,
                         texture: "deimos"
                     }
                 ]
@@ -453,10 +468,6 @@ var config = {
     }
 };
 
-/**
- * Resizes the given canvas element to fit the whole screen.
- * @param {DOMElement} canvas The canvas element to resize
- */
 function resizeToFullscreen(canvas, glContext, uiCanvas, uiContext) {
     const width = document.body.clientWidth;
     const height = document.body.clientHeight;
@@ -542,11 +553,11 @@ class SolarApp {
         const planets = [];
 
         systemConfig.planets.forEach((planetConfig) => {
-            let p = new Planet({ position: [ planetConfig.distance * config.globalScale, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture: this.textureManager.getTexture(planetConfig.texture) });
+            let p = new Planet({ position: [ planetConfig.distance * config.globalScale, 0, 0 ] , radius: planetConfig.radius * config.globalScale, texture: this.textureManager.getTexture(planetConfig.texture), speed: planetConfig.speed, rotationSpeed: planetConfig.rotationSpeed });
             p.create(this.gl);
 
             planetConfig.moons.forEach((moonConfig) => {
-                let m = new Planet({ position: [ (planetConfig.distance + moonConfig.distance) * config.globalScale, 0, 0 ], radius: moonConfig.radius * config.globalScale, texture: this.textureManager.getTexture(moonConfig.texture) });
+                let m = new Planet({ position: [ (planetConfig.distance + moonConfig.distance) * config.globalScale, 0, 0 ], radius: moonConfig.radius * config.globalScale, texture: this.textureManager.getTexture(moonConfig.texture), speed: moonConfig.speed, rotationSpeed: moonConfig.rotationSpeed });
                 m.create(this.gl);
                 p.addChild(m);
             });

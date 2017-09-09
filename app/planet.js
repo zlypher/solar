@@ -51,10 +51,12 @@ const setupSphere = (latBands, longBands, radius) => {
 };
 
 export default class Planet {
-    constructor({ position = [ 0, 0, 0 ], radius = 1, texture = {} }) {
+    constructor({ position = [ 0, 0, 0 ], radius = 1, texture = {}, speed = 0, rotationSpeed = 0 }) {
         this.position = position; // TODO
         this.radius = radius;
         this.texture = texture;
+        this.parentRotationSpeed = speed;
+        this.rotationSpeed = rotationSpeed;
         this.children = [];
         this.buffer = {
             idx: {},
@@ -65,9 +67,6 @@ export default class Planet {
 
         this.parentRotation = 0;
         this.rotation = 0;
-
-        this.parentRotationSpeed = 30;
-        this.rotationSpeed = 25;
     }
 
     addChild(child) {
